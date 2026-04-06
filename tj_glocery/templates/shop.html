@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TJ Grocery</title>
+    {% load static %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar bg-success navbar-dark">
+    <div class="container">
+        <h4>TJ Grocery</h4>
+        <input id="search" class="form-control w-50" placeholder="Search product...">
+        <a href="{% url 'cart' %}" class="btn btn-warning">
+            Cart 🛒 <span id="cart-count">0</span>
+        </a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row" id="product-list"></div>
+</div>
+
+<script>
+    // Convert Django products to JS array
+    const products = [
+        {% for product in products %}
+        {
+            id: {{ product.id }},
+            name: "{{ product.name|escapejs }}",
+            price: {{ product.price }},
+            image: "{{ product.image.url }}",
+            stock: {{ product.stock }},
+            category: "{{ product.category.name|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    // Function to render products
+    function renderProducts(productsArray) {
+        const container = document.getElementById("product-list");
+        container.innerHTML = ""; // Clear previous products
+
+        if (productsArray.length === 0) {
+            container.innerHTML = "<p class='text-center'>No products found</p>";
+            return;
+        }
+
+        productsArray.forEach(p => {
+            const div = document.createElement("div");
+            div.classList.add("col-md-3", "mb-4");
+            div.innerHTML = `
+                <div class="card h-100">
+                    <img src="${p.image}" class="card-img-top" alt="${p.name}">
+                    <div class="card-body">
+                        <h5 class="card-title">${p.name}</h5>
+                        <p class="card-text">₹${p.price}</p>
+                        <p class="card-text"><small>Stock: ${p.stock}</small></p>
+                        <button class="btn btn-success btn-sm">Add to Cart</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // Initial render
+    renderProducts(products);
+
+    // Search filter
+    document.getElementById("search").addEventListener("input", (e) => {
+        const value = e.target.value.toLowerCase();
+        const filtered = products.filter(p => p.name.toLowerCase().includes(value));
+        renderProducts(filtered);
+    });
+</script>
+
+</body>
+</html>
